@@ -1,6 +1,7 @@
 package org.user;
 
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -15,8 +16,13 @@ import java.net.UnknownHostException;
 @ComponentScan(basePackages = {"org.posts.mapper", "org.user"})
 public class UserInit {
     public static void main(String[] args) throws UnknownHostException {
-        System.setProperty("hostName", InetAddress.getLocalHost().getHostName());
-        System.setProperty("hostAddress", InetAddress.getLocalHost().getHostAddress());
-        SpringApplication.run(UserInit.class, args);
+        try {
+            System.setProperty("hostName", InetAddress.getLocalHost().getHostName());
+            System.setProperty("hostAddress", InetAddress.getLocalHost().getHostAddress());
+            SpringApplication.run(UserInit.class, args);
+        } catch (Exception e) {
+            log.error("Exception : {}", e.getMessage());
+            log.error("Stack trace: {}", ExceptionUtils.getStackTrace(e));
+        }
     }
 }

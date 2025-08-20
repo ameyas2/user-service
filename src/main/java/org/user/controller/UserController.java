@@ -2,6 +2,8 @@ package org.user.controller;
 
 import lombok.extern.log4j.Log4j2;
 import org.posts.dto.UserDTO;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.web.multipart.MultipartFile;
 import org.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    // users/<uuid>/image.jpg
+
     @GetMapping("/")
     public ResponseEntity<Collection<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
@@ -28,14 +32,25 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<InputStreamResource> downloadProfileById(@PathVariable("id") UUID id) {
+        return userService.getProfileImage(id);
+    }
+
     @GetMapping("/{id}/posts")
     public ResponseEntity<UserDTO> getPostsByUserId(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(userService.getPostsByUserId(id));
     }
 
     @PostMapping("/")
-    public ResponseEntity<UserDTO> addUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> addUser(UserDTO userDTO) {
         return ResponseEntity.ok(userService.addUser(userDTO));
+    }
+
+    @PostMapping("/profile")
+    public ResponseEntity<UserDTO> addUser(@RequestPart("userDTO") UserDTO userDTO,
+                                           @RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok(userService.addUser(userDTO, file));
     }
 
     @DeleteMapping("/{id}")

@@ -18,19 +18,20 @@ public class UserDAO {
     @Autowired
     private UserRepository userRepository;
 
-    private List<UUID> userIDs;
+    private Map<UUID, User> users;
 
     @Autowired
     private HazelcastInstance hazelcastInstance;
 
     @PostConstruct
     public void init() {
-        userIDs = hazelcastInstance.getList("user_ids");
-        if(userIDs.isEmpty()) {
-            List<UUID> ids = userRepository.getAllIds();
-            userIDs.addAll(ids);
+        try {
+            users = hazelcastInstance.getMap("users");
+            log.info("Total users loaded : {}", users.size());
+        } catch (Exception e) {
+            log.error("Exception : {}", e.getMessage(), e);
+            e.printStackTrace();
         }
-        log.info("Total user ids loaded : {}", userIDs.size());
     }
 
     public Collection<User> getAllUsers() {
@@ -43,10 +44,15 @@ public class UserDAO {
         return userRepository.findById(id);
     }
 
+    public Optional<User> getAnyUser() {
+        return users.values().stream().findAny();
+    }
+
     public User saveUser(User user) {
+        log.info("Adding  user to db : {}", user);
         userRepository.save(user);
-        log.debug("Adding  user with id: {}", user.getId());
-        userIDs.add(user.getId());
+        log.info("Adding user to hazelcast with id: {}", user.getId());
+        users.put(user.getId(), user);
         return user;
     }
 
@@ -63,15 +69,11 @@ public class UserDAO {
         return userRepository.count();
     }
 
-    public UUID getUserId(int index) {
-        return userIDs.get(index);
+    public int updateImageLocation(String location, UUID id) {
+        return userRepository.updateImageLocation(location, id);
     }
 
-    public void addUserId(UUID id) {
-        userIDs.add(id);
-    }
-
-    public boolean deleteUserId(UUID id) {
-        return userIDs.remove(id);
+    public User deleteUserId(UUID id) {
+        return users.remove(id);
     }
 }

@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service-svc
+  labels:
+    app: user-service-svc
+spec:
+  selector:
+    app: user-service-depl
+  ports:
+    - name: svc-port
+      port: 10002
+      protocol: TCP
+      targetPort: 10002
+    - name: actuator-port
+      port: 10012
+      protocol: TCP
+      targetPort: 10012
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service-depl
+  labels:
+    app: user-service-depl
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate # This is the default and can be omitted
+    rollingUpdate:
+      maxUnavailable: 25% # Max percentage of Pods that can be unavailable during the update
+      maxSurge: 25%
+  selector:
+    matchLabels:
+      app: user-service-depl
+  template:
+    metadata:
+      labels:
+        app: user-service-depl
+    spec:
+      containers:
+        - image: ameyas5/user-service
+          name: user-service
+          ports:
+            - name: svc-port
+              containerPort: 10002
+            - name: actuator-port
+              containerPort: 10012
+          resources:
+            requests:
+              memory: "512M"
+              cpu: "0.25"
+            limits:
+              memory: "512M"
+              cpu: "0.5"
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: user-service-config
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-service-config
+data:
+  HAZELCAST.HOST: "192.168.29.212"
+  HAZELCAST.CLUSTER_NAME: "hazel_cluster"
+  HAZELCAST.PORT: "5701"
+  DATASOURCE.URL: "jdbc:postgresql://192.168.29.206:26257/sports_application"
+  DATASOURCE.USERNAME: "root"
+  DATASOURCE.PASSWORD: ""
+  DATASOURCE.DRIVER: "org.postgresql.Driver"
+  JPA.DDL: "none"
+  JPA.FORMAT_SQL: "false"
+  JPA.SHOW_SQL: "false"
+  MINIO.ENDPOINT : "http://192.168.29.206:9000"
+  MINIO.ACCESS_KEY : "root"
+  MINIO.SECRET_KEY : "password"

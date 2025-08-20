@@ -10,15 +10,91 @@ spring:
   application:
     name: user-service
   datasource:
+    url: ${DATASOURCE.URL}
+    username: ${DATASOURCE.USERNAME}
+    password: ${DATASOURCE.PASSWORD}
+    driver-class-name: ${DATASOURCE.DRIVER}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA.DDL}
+    properties:
+      hibernate:
+        #dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: ${JPA.FORMAT_SQL}
+    show-sql: ${JPA.SHOW_SQL}
+
+external-server:
+  hazelcast:
+    host: ${HAZELCAST.HOST}
+    port: ${HAZELCAST.PORT}
+    cluster-name: ${HAZELCAST.CLUSTER_NAME}
+  minio:
+    endpoint: ${MINIO.ENDPOINT}
+    access-key: ${MINIO.ACCESS_KEY}
+    secret-key: ${MINIO.SECRET_KEY}
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  server:
+    port: 10012
+  security:
+    enabled: false
+
+---
+
+server:
+  servlet:
+    context-path: /user-service
+  port: 10002
+
+spring:
+  threads:
+    virtual:
+      enabled: true
+  config:
+    activate:
+      on-profile: dev
+  application:
+    name: user-service
+  datasource:
     url: jdbc:postgresql://192.168.29.206:26257/posts_application
     username: root
     password:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         #dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
+
+external-server:
+  hazelcast:
+    host: 192.168.29.212
+    port: 5701
+    cluster-name: hazel_cluster
+  minio:
+    endpoint: http://192.168.29.206:9000
+    access-key: root
+    secret-key: password
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  server:
+    port: 10012
+  security:
+    enabled: false
