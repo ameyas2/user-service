@@ -4,8 +4,10 @@ import com.hazelcast.core.HazelcastInstance;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import org.posts.model.User;
+import org.posts.model.UserRedis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.user.repository.UserRedisRepository;
 import org.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -17,6 +19,9 @@ public class UserDAO {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserRedisRepository userRedisRepository;
 
     private Map<UUID, User> users;
 
@@ -53,7 +58,20 @@ public class UserDAO {
         userRepository.save(user);
         log.info("Adding user to hazelcast with id: {}", user.getId());
         users.put(user.getId(), user);
+        userRedisRepository.save(toUserRedis(user));
         return user;
+    }
+
+    private UserRedis toUserRedis(User user) {
+        return UserRedis.builder()
+                .id(user.getId())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .firstName(user.getFirstName())
+                .lastname(user.getLastname())
+                .profileImageLocation(user.getProfileImageLocation())
+                .username(user.getUsername())
+                .build();
     }
 
     public void deleteUser(UUID id) {
